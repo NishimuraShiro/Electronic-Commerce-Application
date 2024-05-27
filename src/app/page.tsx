@@ -1,33 +1,30 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import HamburgerMenu from "@/components/HamburgerMenu";
+import { TopItem } from "@/components/TopItem";
+import { AuthContext } from "@/context/AuthContext";
+import { useContext, useEffect } from "react";
 
 export default function Home() {
-  // ルーター
-  const router = useRouter();
-
-  /**
-   * ログインチェック
-   */
-  const loginCheck = async () => {
-    const cookieResponse = await fetch(
-      "https://ec-app-backend-67e3477cc04a.herokuapp.com/api/v1/auth/",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-
-    if (!cookieResponse.ok) {
-      return router.push("/login");
-    }
-
-    return router.push("/user");
-  };
-
-  // 初回はログインチェック
+  const { isSignedIn, currentUser } = useContext(AuthContext);
   useEffect(() => {
-    loginCheck();
-  }, []);
+    console.log("isSignedIn:", isSignedIn);
+    console.log("currentUser:", currentUser);
+  }, [isSignedIn, currentUser]);
+  return (
+    <div className="m-4">
+      {isSignedIn && currentUser ? (
+        <>
+          <HamburgerMenu />
+          <h1>{currentUser.name} さん、ようこそ！</h1>
+          <TopItem />
+        </>
+      ) : (
+        <>
+          <HamburgerMenu />
+          <TopItem />
+        </>
+      )}
+    </div>
+  );
 }

@@ -1,5 +1,5 @@
 "use client";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { setCookie, destroyCookie } from "nookies";
 import { Alert, Box, Grid, Link, TextField } from "@mui/material";
 import { useRouter } from "next/navigation";
@@ -10,10 +10,17 @@ import { SignInParams, signIn } from "@/utils/auth";
 import { AuthContext } from "@/context/AuthContext";
 
 const LoginPage = () => {
-  const { isSignedIn, setIsSignedIn, setCurrentUser } = useContext(AuthContext);
+  const { isSignedIn, currentUser, setIsSignedIn, setCurrentUser } =
+    useContext(AuthContext);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const router = useRouter();
+
+  useEffect(() => {
+    if (isSignedIn && currentUser) {
+      router.push("/top");
+    }
+  }, [isSignedIn, currentUser, router]);
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
@@ -30,7 +37,7 @@ const LoginPage = () => {
 
     const params: SignInParams = {
       email: email,
-      password: password
+      password: password,
     };
 
     setIsError(false);
@@ -42,7 +49,7 @@ const LoginPage = () => {
       if (res.status === 200) {
         // ログインに成功した場合はCookieに各値を格納
         setCookie(null, "_access_token", res.headers["access-token"], {
-          path: "/"
+          path: "/",
         });
         setCookie(null, "_client", res.headers["client"], { path: "/" });
         setCookie(null, "_uid", res.headers["uid"], { path: "/" });
