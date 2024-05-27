@@ -1,0 +1,56 @@
+version: "3"
+services:
+  frontend:
+    build:
+      context: ./ # Next.jsアプリケーションのパスを指定
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app # Next.jsアプリケーションのパスを指定
+    depends_on:
+      - backend
+      - postgresql
+
+  backend:
+    build:
+      context: ./src/rails # Railsアプリケーションのパスを指定
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./src/rails:/app # Railsアプリケーションのパスを指定
+    depends_on:
+      - postgresql
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3001 -b '0.0.0.0'"
+    environment:
+      DATABASE_URL: postgres://postgres:password@postgresql:5432/rails_development
+      # RAILS_MASTER_KEY: "b09d5fc430fc780eee57025d2ed71c4b"
+
+  postgresql:
+    image: postgres:14.9
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    restart: always
+    ports:
+      - "5432:5432"
+
+  pgadmin4:
+    image: dpage/pgadmin4:6.11
+    container_name: container_pgadmin
+    ports:
+      - 8080:80
+    volumes:
+      - volume_pgadmin:/var/lib/pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: example@example.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    depends_on:
+      - postgresql
+
+volumes:
+  postgres_volume:
+  volume_pgadmin:
