@@ -41,7 +41,11 @@ const HamburgerMenu = () => {
     { text: "Home", link: "/" },
     { text: "About", link: "/" },
     { text: "Contact", link: "/" },
-    { text: "", link: "http://localhost:3000/login", isAvatar: true },
+    {
+      text: "",
+      link: "https://electronic-commerce-app-git-ff08e4-hamiltons-projects-25437349.vercel.app/login",
+      isAvatar: true,
+    },
   ];
 
   const list = () => (
