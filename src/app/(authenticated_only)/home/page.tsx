@@ -1,6 +1,6 @@
 "use client";
-import React, { useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
+import React, { useContext } from "react";
 
 const HomePage: React.FC = () => {
   const { isSignedIn, currentUser } = useContext(AuthContext);

@@ -17,7 +17,7 @@ export const TopItem = () => {
   return (
     <>
       <div className="flex flex-col justify-center items-center">
-        <div className="mb-16">
+        <div className="mt-8 mb-16">
           {/* アニメーション */}
           <TopImageAnimation />
         </div>

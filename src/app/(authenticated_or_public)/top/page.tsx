@@ -14,12 +14,18 @@ const TopPage = () => {
     <div className="m-4">
       {isSignedIn && currentUser ? (
         <>
-          <HamburgerMenu />
-          <h1>{currentUser.name} さん、ようこそ！</h1>
+          <HamburgerMenu hasLogoutIcon={true} />
+          <h1 className="text-xl font-bold mt-2">
+            {currentUser.name} さん、ようこそ！
+          </h1>
           <TopItem />
         </>
       ) : (
-        <h1>Not Signed In</h1>
+        <>
+          <HamburgerMenu hasLogoutIcon={false} />
+          <h1>Not Signed In</h1>
+          <TopItem />
+        </>
       )}
     </div>
   );

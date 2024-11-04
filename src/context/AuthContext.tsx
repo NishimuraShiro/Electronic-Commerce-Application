@@ -72,11 +72,31 @@ export const AuthProvider = ({ children }: Props) => {
   }, [setCurrentUser]);
 
   useEffect(() => {
+    const allowedPaths = [
+      "/",
+      "/top",
+      "/login",
+      "/register",
+      "/request_reset_password",
+      "/reset_password"
+    ];
+
     // 未認証の場合はloginページへリダイレクト
-    if (!loading && !isSignedIn && pathname !== "/login") {
+    if (!loading && !isSignedIn && !allowedPaths.includes(pathname)) {
       router.push("/login");
+    } else if (
+      (isSignedIn && pathname === "/register") ||
+      (isSignedIn && pathname === "/login")
+    ) {
+      router.push("/top");
+    } else if (isSignedIn && pathname === "/") {
+      router.push("/");
     }
   }, [loading, isSignedIn, pathname]);
+
+  if (loading) {
+    return <div>loading...</div>;
+  }
 
   return (
     <AuthContext.Provider

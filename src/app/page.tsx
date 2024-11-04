@@ -15,13 +15,15 @@ export default function Home() {
     <div className="m-4">
       {isSignedIn && currentUser ? (
         <>
-          <HamburgerMenu />
-          <h1>{currentUser.name} さん、ようこそ！</h1>
+          <HamburgerMenu hasLogoutIcon={true} />
+          <h1 className="text-xl font-bold mt-2">
+            {currentUser.name} さん、ようこそ！
+          </h1>
           <TopItem />
         </>
       ) : (
         <>
-          <HamburgerMenu />
+          <HamburgerMenu hasLogoutIcon={false} />
           <TopItem />
         </>
       )}

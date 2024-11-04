@@ -1,5 +1,5 @@
 // components/HamburgerMenu.js
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
@@ -9,43 +9,83 @@ import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
-import Avatar from "@mui/material/Avatar";
-import Link from "@mui/material/Link";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import { styled } from "@mui/system";
+import { Button, Dialog, DialogActions, DialogTitle } from "@mui/material";
+import { signOut } from "@/utils/auth";
+import { destroyCookie } from "nookies";
+import { AuthContext } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
-// アイコンボタンのスタイルを変更
-const WhiteIconButton = styled(IconButton)({
-  color: "#000", // アイコンの色を黒に変更
+const BlackIconButton = styled(IconButton)({
+  color: "#000" // アイコンの色を黒に変更
 });
 
-// AppBarのスタイルを変更
 const WhiteAppBar = styled(AppBar)({
   backgroundColor: "#fff", // AppBarの背景色を白に変更
-  color: "#000", // テキストの色を黒に変更
+  color: "#000" // テキストの色を黒に変更
 });
 
-const HamburgerMenu = () => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+interface MenuItem {
+  text: string;
+  link: string;
+  isAvatar?: boolean;
+}
 
-  const toggleDrawer = (open: any) => (event: any) => {
-    if (
-      event.type === "keydown" &&
-      (event.key === "Tab" || event.key === "Shift")
-    ) {
-      return;
-    }
-    setDrawerOpen(open);
+interface HamburgerMenuProps {
+  hasLogoutIcon: boolean;
+}
+
+const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ hasLogoutIcon }) => {
+  const { isSignedIn, setIsSignedIn } = useContext(AuthContext);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
+  const toggleDrawer =
+    (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
+      if (
+        event.type === "keydown" &&
+        ((event as React.KeyboardEvent).key === "Tab" ||
+          (event as React.KeyboardEvent).key === "Shift")
+      ) {
+        return;
+      }
+      setDrawerOpen(open);
+    };
+
+  const handleLogoutClick = (event: React.MouseEvent) => {
+    event.preventDefault();
+    setLogoutDialogOpen(true);
   };
 
-  const menuItems = [
+  const router = useRouter();
+  const handleLogoutConfirm = async () => {
+    setLogoutDialogOpen(false);
+    // ログアウト処理をここに追加します
+    try {
+      const res = await signOut();
+      if (res.data.success === true) {
+        destroyCookie(null, "_access_token");
+        destroyCookie(null, "_client");
+        destroyCookie(null, "_uid");
+
+        setIsSignedIn(false);
+
+        router.push("/login");
+      }
+    } catch (error) {}
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutDialogOpen(false);
+  };
+
+  const menuItems: MenuItem[] = [
     { text: "Home", link: "/" },
     { text: "About", link: "/" },
     { text: "Contact", link: "/" },
-    {
-      text: "",
-      link: "https://electronic-commerce-app-git-ff08e4-hamiltons-projects-25437349.vercel.app/login",
-      isAvatar: true,
-    },
+    { text: "", link: "http://localhost:3000/login", isAvatar: true },
+    ...(hasLogoutIcon ? [{ text: "Logout", link: "#", isAvatar: false }] : [])
   ];
 
   const list = () => (
@@ -56,10 +96,15 @@ const HamburgerMenu = () => {
     >
       <List>
         {menuItems.map((item, index) => (
-          <ListItem component={Link} href={item.link} key={item.text}>
+          <ListItem
+            component="a"
+            href={item.link}
+            key={index}
+            onClick={item.text === "Logout" ? handleLogoutClick : undefined}
+          >
             {item.isAvatar ? (
               <>
-                <Avatar alt="" src="/broken-image.jpg" />
+                <PersonOutlineIcon fontSize="large" className="ml-2" />
                 <ListItemText primary={item.text} />
               </>
             ) : (
@@ -75,19 +120,30 @@ const HamburgerMenu = () => {
     <div>
       <WhiteAppBar position="static">
         <Toolbar>
-          <WhiteIconButton
+          <BlackIconButton
             edge="start"
             aria-label="menu"
             onClick={toggleDrawer(true)}
           >
             <MenuIcon />
-          </WhiteIconButton>
+          </BlackIconButton>
           <Typography variant="h6">My App</Typography>
         </Toolbar>
       </WhiteAppBar>
       <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
         {list()}
       </Drawer>
+      <Dialog open={logoutDialogOpen} onClose={handleLogoutCancel}>
+        <DialogTitle>ログアウトをしますか？</DialogTitle>
+        <DialogActions>
+          <Button onClick={handleLogoutCancel} color="primary">
+            いいえ
+          </Button>
+          <Button onClick={handleLogoutConfirm} color="primary">
+            はい
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
