@@ -68,16 +68,20 @@ export const requestResetPassword = async (
   email: string
 ): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await fetch("http://localhost:3001/api/v1/auth/password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        email,
-        redirect_url: "http://localhost:3000/reset_password"
-      })
-    });
+    const response = await fetch(
+      "https://ec-app-backend-67e3477cc04a.herokuapp.com/api/v1/auth/password",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          redirect_url:
+            "https://electronic-commerce-app-git-ff08e4-hamiltons-projects-25437349.vercel.app/reset_password"
+        })
+      }
+    );
 
     const data = await response.json();
     if (response.ok) {
@@ -111,17 +115,20 @@ export const resetPassword = async (
   resetPasswordToken: string | null
 ): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await fetch("http://localhost:3001/api/v1/auth/password", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        password,
-        password_confirmation: passwordConfirmation,
-        reset_password_token: resetPasswordToken
-      })
-    });
+    const response = await fetch(
+      "https://ec-app-backend-67e3477cc04a.herokuapp.com/api/v1/auth/password",
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          password,
+          password_confirmation: passwordConfirmation,
+          reset_password_token: resetPasswordToken
+        })
+      }
+    );
 
     console.log(response);
     const responseData = await response.json();
@@ -132,7 +139,7 @@ export const resetPassword = async (
         return {
           success: false,
           message:
-            "パスワードを再設定するために<a href='http://localhost:3000/request_reset_password' style='color: blue; text-decoration: underline;'>こちら</a>のリンクから再設定手続きを行ってください。"
+            "パスワードを再設定するために<a href='https://electronic-commerce-app-git-ff08e4-hamiltons-projects-25437349.vercel.app/request_reset_password' style='color: blue; text-decoration: underline;'>こちら</a>のリンクから再設定手続きを行ってください。"
         };
       }
       return {

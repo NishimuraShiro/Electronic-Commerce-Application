@@ -8,7 +8,7 @@ const Page = ({ params }: { params: { id: string } }) => {
   const getUser = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3001/api/v1/users/${params.id}`,
+        `https://ec-app-backend-67e3477cc04a.herokuapp.com/api/v1/users/${params.id}`,
         { next: { revalidate: 30 } } // ISR
       );
       if (!response.ok) {
@@ -29,7 +29,7 @@ const Page = ({ params }: { params: { id: string } }) => {
   // useEffect(() => {
   //   // APIからユーザー情報を取得
   //   axios
-  //     .get(`http://localhost:3001/api/v1/users/${params.id}`)
+  //     .get(`https://ec-app-backend-67e3477cc04a.herokuapp.com/api/v1/users/${params.id}`)
   //     .then((response) => setUserName(response.data.name))
   //     .catch((error) => console.error("Error fetching user data:", error));
   // }, []);
