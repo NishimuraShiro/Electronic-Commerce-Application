@@ -23,7 +23,10 @@ export const ErrorAlertMessage: React.FC<ErrorAlertMessageProps> = ({
           severity="error"
           onClose={() => handleErrorClose(index)}
         >
-          {message}
+          <span
+            dangerouslySetInnerHTML={{ __html: message }}
+            style={{ display: "inline-block" }}
+          />
         </Alert>
       ))}
     </>

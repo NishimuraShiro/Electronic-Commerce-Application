@@ -37,7 +37,7 @@ export const RequestResetPassword = () => {
     setDisabledButton(true);
     setErrors(validationErrors);
     setErrorMessagesDisplayedBelowButton(errorMessages);
-
+    console.log(errorMessages);
     if (errorMessages.length > 0) {
       setIsError(true);
     }
@@ -57,6 +57,7 @@ export const RequestResetPassword = () => {
           ...prevMessages,
           message
         ]);
+        console.log(errorMessages);
         if (message) {
           setErrors((prevErrors) => ({ ...prevErrors, email: true }));
         }
