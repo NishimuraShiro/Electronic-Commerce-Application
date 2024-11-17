@@ -1,5 +1,5 @@
 "use client";
-import HamburgerMenu from "@/components/HamburgerMenu";
+import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { TopItem } from "@/components/TopItem";
 import { AuthContext } from "@/context/AuthContext";
 import React, { useContext, useEffect } from "react";

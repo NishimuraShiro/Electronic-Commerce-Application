@@ -9,8 +9,8 @@ interface LabeledPasswordFieldProps {
   name: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  error: boolean;
-  helperText: string;
+  errorStatus: boolean;
+  errorMessageDisplayedBelowInput: string;
 }
 
 export const LabeledPasswordField: React.FC<LabeledPasswordFieldProps> = ({
@@ -18,8 +18,8 @@ export const LabeledPasswordField: React.FC<LabeledPasswordFieldProps> = ({
   name,
   value,
   onChange,
-  error,
-  helperText
+  errorStatus,
+  errorMessageDisplayedBelowInput
 }) => {
   return (
     <div className="mt-12">
@@ -33,8 +33,8 @@ export const LabeledPasswordField: React.FC<LabeledPasswordFieldProps> = ({
         name={name}
         value={value}
         onChange={onChange}
-        error={error}
-        helperText={helperText}
+        error={errorStatus}
+        helperText={errorMessageDisplayedBelowInput}
       />
     </div>
   );

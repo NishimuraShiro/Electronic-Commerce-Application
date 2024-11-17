@@ -1,7 +1,7 @@
 "use client";
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useState } from "react";
 import { setCookie, destroyCookie } from "nookies";
-import { Box, Grid, Link } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { Copyright } from "@/components/ui/Copyright";
 import { SignInParams, signIn } from "@/utils/auth";
@@ -9,18 +9,18 @@ import { AuthContext } from "@/context/AuthContext";
 import { LabeledPasswordField } from "@/components/ui/LabeledPasswordField";
 import { useHandleInputChange } from "@/hooks/useHandleInputChange";
 import { LabeledTextField } from "./ui/LabeledTextField";
-import MessageAlert from "./MessageAlert";
+import { ErrorAlertMessage } from "./ErrorAlertMessage";
 import { validateLoginForm } from "@/utils/login_validation";
 import { DisabledButton } from "./ui/DisabledButton";
 import { ButtonAboutAuth } from "./ui/ButtonAboutAuth";
+import { ActionLink } from "./ActionLink";
 
 export const LoginForm = () => {
   const { setIsSignedIn, setCurrentUser } = useContext(AuthContext);
   const [isError, setIsError] = useState<boolean>(false);
-  const [errorMessages, setErrorMessages] = useState<string[]>([]);
-  const [isSuccess, setIsSuccess] = useState<boolean>(false);
-  const [successMessage, setSuccessMessage] = useState<string>("");
-  const passwordRef = useRef<HTMLInputElement>(null);
+  const [errorMessages, setErrorMessagesDisplayedBelowButton] = useState<
+    string[]
+  >([]);
   const [password, setPassword] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, boolean>>({
@@ -35,25 +35,19 @@ export const LoginForm = () => {
 
   const router = useRouter();
 
-  const handleSubmit = async (event: any) => {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDisabledButton(true);
+    const { errors: validationErrors, errorMessages } = validateLoginForm(
+      email,
+      password
+    );
+    setErrors(validationErrors);
+    setErrorMessagesDisplayedBelowButton(errorMessages);
 
-    const { errors, errorMessages } = validateLoginForm(email, password);
-    setErrors(errors);
-    setErrorMessages(errorMessages);
     if (errorMessages.length > 0) {
       setIsError(true);
-      return;
-    }
-
-    const data = new FormData(event.currentTarget);
-
-    setEmail(data.get("email")?.toString() || "");
-    setPassword(data.get("password")?.toString() || "");
-
-    if (!email || !password) {
-      setIsError(true);
-      setErrorMessages(["必須項目を入力してください。"]);
+      setDisabledButton(false);
       return;
     }
 
@@ -62,13 +56,8 @@ export const LoginForm = () => {
       password: password
     };
 
-    setIsError(false);
-    setErrorMessages([]);
-
     try {
-      setDisabledButton(true);
       const res = await signIn(params);
-      console.log(res);
       if (res.status === 200) {
         setCookie(null, "_access_token", res.headers["access-token"], {
           path: "/"
@@ -81,7 +70,9 @@ export const LoginForm = () => {
       } else {
         setDisabledButton(false);
         setIsError(true);
-        setErrorMessages(["ログイン情報が見つかりません。"]);
+        setErrorMessagesDisplayedBelowButton([
+          "ログイン情報が見つかりません。"
+        ]);
       }
     } catch (error: any) {
       setDisabledButton(false);
@@ -96,18 +87,17 @@ export const LoginForm = () => {
           setEmail(email);
           setPassword("");
           setIsError(true);
-          console.log(passwordRef.current);
-          if (passwordRef.current) {
-            passwordRef.current.focus();
-          }
-          setErrorMessages(["メールアドレスとパスワードが一致しません。"]);
+          setErrorMessagesDisplayedBelowButton([
+            "メールアドレスとパスワードが一致しません。"
+          ]);
+          setErrors((prevErrors) => ({ ...prevErrors, password: true }));
         } else {
           setIsError(true);
-          setErrorMessages(["エラーが発生しました。"]);
+          setErrorMessagesDisplayedBelowButton(["エラーが発生しました。"]);
         }
       } else {
         setIsError(true);
-        setErrorMessages(["エラーが発生しました。"]);
+        setErrorMessagesDisplayedBelowButton(["エラーが発生しました。"]);
       }
     }
   };
@@ -126,22 +116,44 @@ export const LoginForm = () => {
             value={email}
             onChange={handleInputChange(setEmail, "email")}
             required
-            error={errors.email}
-            helperText={
-              errors.email ? "メールアドレスの形式が誤っています。" : ""
-            }
+            errorStatus={errors.email}
+            errorMessageDisplayedBelowInput={(() => {
+              if (errors.email) {
+                if (
+                  errorMessages.find((msg) =>
+                    msg.includes("メールアドレスを入力してください。")
+                  )
+                ) {
+                  return "メールアドレスを入力してください。";
+                } else {
+                  return "メールアドレスの形式が誤っています。";
+                }
+              } else {
+                return "";
+              }
+            })()}
           />
           <LabeledPasswordField
             label="パスワード"
             name="password"
             value={password}
             onChange={handleInputChange(setPassword, "password")}
-            error={errors.password}
-            helperText={
-              errors.password
-                ? "パスワードは、6字以上16字以下の半角入力を含む必要があります。"
-                : ""
-            }
+            errorStatus={errors.password}
+            errorMessageDisplayedBelowInput={(() => {
+              if (errors.password) {
+                if (
+                  errorMessages.find((msg) =>
+                    msg.includes("メールアドレスとパスワードが一致しません。")
+                  )
+                ) {
+                  return "パスワードが正しくありません。";
+                } else {
+                  return "パスワードは、6字以上16字以下の半角入力を含む必要があります。";
+                }
+              } else {
+                return "";
+              }
+            })()}
           />
           {disabledButton ? (
             <DisabledButton buttonName="ログイン" />
@@ -154,28 +166,18 @@ export const LoginForm = () => {
         </Box>
       </Grid>
       <Grid item xs={11}>
-        <MessageAlert
-          isError={isError}
-          errorMessages={errorMessages}
-          setErrorMessages={setErrorMessages}
-          isSuccess={isSuccess}
-          successMessage={successMessage}
-          onSuccessClose={() => {
-            setIsSuccess(false);
-            setSuccessMessage("");
-          }}
-        />
+        {isError && (
+          <ErrorAlertMessage
+            errorMessages={errorMessages}
+            setErrorMessages={setErrorMessagesDisplayedBelowButton}
+          />
+        )}
       </Grid>
-      <Grid container className="mt-12" justifyContent="center">
-        <Link href="../request_reset_password" underline="none">
-          パスワードをお忘れですか？
-        </Link>
-      </Grid>
-      <Grid container className="mt-12" justifyContent="center">
-        <Link href="../register" variant="subtitle1">
-          アカウントを作成する
-        </Link>
-      </Grid>
+      <ActionLink
+        href="../request_reset_password"
+        label="パスワードをお忘れですか？"
+      />
+      <ActionLink href="../register" label="アカウントを作成する" />
       <div className="my-10">
         <Copyright />
       </div>

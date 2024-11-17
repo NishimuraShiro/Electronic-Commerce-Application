@@ -8,19 +8,20 @@ export const validateResetPasswordForm = (
   password: string,
   passwordConfirmation: string
 ): ValidationResult => {
-  const errors: ValidationResult["errors"] = {
-    password: false,
-    passwordConfirmation: false
+  const validationResult: ValidationResult = {
+    errors: {
+      password: false,
+      passwordConfirmation: false
+    },
+    errorMessages: []
   };
-  const errorMessages: string[] = [];
 
-  validatePassword(password, errors, errorMessages);
+  validatePassword(password, validationResult);
   validatePasswordConfirmation(
     password,
     passwordConfirmation,
-    errors,
-    errorMessages
+    validationResult
   );
 
-  return { errors, errorMessages };
+  return validationResult;
 };

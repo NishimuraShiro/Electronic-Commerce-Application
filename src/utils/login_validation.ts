@@ -8,14 +8,16 @@ export const validateLoginForm = (
   email: string,
   password: string
 ): ValidationResult => {
-  const errors: ValidationResult["errors"] = {
-    email: false,
-    password: false
+  const validationResult: ValidationResult = {
+    errors: {
+      email: false,
+      password: false
+    },
+    errorMessages: []
   };
-  const errorMessages: string[] = [];
 
-  validateEmail(email, errors, errorMessages);
-  validatePassword(password, errors, errorMessages);
+  validateEmail(email, validationResult);
+  validatePassword(password, validationResult);
 
-  return { errors, errorMessages };
+  return validationResult;
 };

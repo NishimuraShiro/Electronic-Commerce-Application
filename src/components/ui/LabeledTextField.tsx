@@ -9,8 +9,8 @@ interface LabeledTextFieldProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
-  error: boolean | undefined;
-  helperText: string;
+  errorStatus: boolean;
+  errorMessageDisplayedBelowInput: string;
 }
 
 export const LabeledTextField: React.FC<LabeledTextFieldProps> = ({
@@ -18,8 +18,8 @@ export const LabeledTextField: React.FC<LabeledTextFieldProps> = ({
   value,
   onChange,
   required,
-  error,
-  helperText
+  errorStatus,
+  errorMessageDisplayedBelowInput
 }) => (
   <div className="mt-12">
     <div className="flex items-center">
@@ -33,8 +33,8 @@ export const LabeledTextField: React.FC<LabeledTextFieldProps> = ({
       onChange={onChange}
       sx={{ width: "288px" }}
       variant="outlined"
-      error={error}
-      helperText={helperText}
+      error={errorStatus}
+      helperText={errorMessageDisplayedBelowInput}
     />
   </div>
 );

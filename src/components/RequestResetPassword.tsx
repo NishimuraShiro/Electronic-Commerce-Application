@@ -3,20 +3,22 @@ import { Box, Grid } from "@mui/material";
 import React, { useState } from "react";
 import { LabeledTextField } from "./ui/LabeledTextField";
 import { useHandleInputChange } from "@/hooks/useHandleInputChange";
-import MessageAlert from "./MessageAlert";
 import { validateRequestResetPasswordForm } from "@/utils/request_reset_password_validation";
 import { requestResetPassword } from "@/utils/auth";
 import { Copyright } from "./ui/Copyright";
 import { DisabledButton } from "./ui/DisabledButton";
 import { ButtonAboutAuth } from "./ui/ButtonAboutAuth";
+import { ErrorAlertMessage } from "./ErrorAlertMessage";
+import { SuccessAlertMessage } from "./ui/SuccessAlertMessage";
 
 export const RequestResetPassword = () => {
   const [email, setEmail] = useState<string>("");
   const [isError, setIsError] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
-  const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  const [errorMessages, setErrorMessagesDisplayedBelowButton] = useState<
+    string[]
+  >([]);
   const [errors, setErrors] = useState<Record<string, boolean>>({
     email: false
   });
@@ -32,26 +34,35 @@ export const RequestResetPassword = () => {
     // バリデーション関数の結果を設定
     const { errors: validationErrors, errorMessages } =
       validateRequestResetPasswordForm(email);
-
+    setDisabledButton(true);
     setErrors(validationErrors);
-    setErrorMessages(errorMessages);
-    console.log(errorMessages);
+    setErrorMessagesDisplayedBelowButton(errorMessages);
 
     if (errorMessages.length > 0) {
       setIsError(true);
-      return;
     }
 
-    setDisabledButton(true);
-    const { success, message } = await requestResetPassword(email);
-
-    if (success) {
-      setIsSuccess(true);
-      setSuccessMessage(message);
+    const result = await requestResetPassword(email);
+    if (result) {
+      const { success, message } = result;
+      if (success) {
+        setIsError(false);
+        setErrorMessagesDisplayedBelowButton([]);
+        setShowSuccessMessage(true);
+        setSuccessMessage(message);
+      } else {
+        setIsError(true);
+        setDisabledButton(false);
+        setErrorMessagesDisplayedBelowButton((prevMessages) => [
+          ...prevMessages,
+          message
+        ]);
+        if (message) {
+          setErrors((prevErrors) => ({ ...prevErrors, email: true }));
+        }
+      }
     } else {
       setDisabledButton(false);
-      setIsError(true);
-      setErrorMessages([message]);
     }
   };
   return (
@@ -68,10 +79,30 @@ export const RequestResetPassword = () => {
             value={email}
             onChange={handleInputChange(setEmail, "email")}
             required
-            error={errors.email}
-            helperText={
-              errors.email ? "メールアドレスの形式が誤っています" : ""
-            }
+            errorStatus={errors.email}
+            errorMessageDisplayedBelowInput={(() => {
+              if (errors.email) {
+                if (
+                  errorMessages.find((msg) =>
+                    msg.includes("メールアドレスを入力してください。")
+                  )
+                ) {
+                  return "メールアドレスを入力してください。";
+                } else if (
+                  errorMessages.find((msg) =>
+                    msg.includes(
+                      "入力されたメールアドレスは登録されていません。"
+                    )
+                  )
+                ) {
+                  return "このメールアドレスは登録されていません。";
+                } else {
+                  return "メールアドレスの形式が誤っています。";
+                }
+              } else {
+                return "";
+              }
+            })()}
           />
           {disabledButton ? (
             <DisabledButton buttonName="送信" />
@@ -81,17 +112,16 @@ export const RequestResetPassword = () => {
         </Box>
       </Grid>
       <Grid item xs={11}>
-        <MessageAlert
-          isError={isError}
-          errorMessages={errorMessages}
-          setErrorMessages={setErrorMessages}
-          isSuccess={isSuccess}
-          successMessage={successMessage}
-          onSuccessClose={() => {
-            setIsSuccess(false);
-            setSuccessMessage("");
-          }}
-        />
+        {isError ? (
+          <ErrorAlertMessage
+            errorMessages={errorMessages}
+            setErrorMessages={setErrorMessagesDisplayedBelowButton}
+          />
+        ) : (
+          showSuccessMessage && (
+            <SuccessAlertMessage successMessage={successMessage} />
+          )
+        )}
       </Grid>
       <div className="my-10">
         <Copyright />

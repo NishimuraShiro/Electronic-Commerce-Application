@@ -13,7 +13,7 @@ export const signUp = async (
   email: string | null,
   password: string | null,
   passwordConfirmation: string | null
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{ success: boolean; message: string } | void> => {
   try {
     const response = await client.post("/auth/", {
       name,
@@ -34,18 +34,26 @@ export const signUp = async (
   } catch (error: any) {
     if (error.response && error.response.data) {
       const responseData = error.response.data;
-      if (responseData.errors.email.includes("はすでに存在します")) {
+      console.log(responseData);
+      if (
+        responseData.errors &&
+        responseData.errors.email &&
+        Array.isArray(responseData.errors.email) &&
+        responseData.errors.email.some((err: string) =>
+          err.includes("はすでに存在します")
+        )
+      ) {
         return {
           success: false,
           message:
-            "このメールアドレスは既に使用されています。別のメールアドレスを使用してください。"
+            "入力したメールアドレスは既に使用されています。別のメールアドレスを使用してください。"
         };
+      } else {
+        return;
       }
     }
-    return { success: false, message: "エラーが発生しました。" };
   }
-
-  return { success: false, message: "不明なエラーが発生しました。" };
+  return;
 };
 
 export const signIn = (params: SignInParams) => {
@@ -66,7 +74,7 @@ export const signOut = () => {
 
 export const requestResetPassword = async (
   email: string
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{ success: boolean; message: string } | void> => {
   try {
     const response = await fetch(
       "https://ec-app-backend-67e3477cc04a.herokuapp.com/api/v1/auth/password",
@@ -101,11 +109,8 @@ export const requestResetPassword = async (
         message: `Error: ${data.errors.join(", ")}`
       };
     }
-  } catch (error: any) {
-    return {
-      success: false,
-      message: "不明なエラーが発生しました。"
-    };
+  } catch {
+    return;
   }
 };
 
@@ -113,7 +118,7 @@ export const resetPassword = async (
   password: string,
   passwordConfirmation: string,
   resetPasswordToken: string | null
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{ success: boolean; message: string } | void> => {
   try {
     const response = await fetch(
       "https://ec-app-backend-67e3477cc04a.herokuapp.com/api/v1/auth/password",
@@ -130,7 +135,6 @@ export const resetPassword = async (
       }
     );
 
-    console.log(response);
     const responseData = await response.json();
     if (response.ok) {
       return { success: true, message: "" };
@@ -147,8 +151,8 @@ export const resetPassword = async (
         message: `Error: ${responseData.errors.join(", ")}`
       };
     }
-  } catch (error) {
-    return { success: false, message: "エラーが発生しました。" };
+  } catch {
+    return;
   }
 };
 

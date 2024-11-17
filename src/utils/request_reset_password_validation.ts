@@ -3,12 +3,14 @@ import { validateEmail, ValidationResult } from "./validationUtils";
 export const validateRequestResetPasswordForm = (
   email: string
 ): ValidationResult => {
-  const errors: ValidationResult["errors"] = {
-    email: false
+  const validationResult: ValidationResult = {
+    errors: {
+      email: false
+    },
+    errorMessages: []
   };
-  const errorMessages: string[] = [];
 
-  validateEmail(email, errors, errorMessages);
+  validateEmail(email, validationResult);
 
-  return { errors, errorMessages };
+  return validationResult;
 };

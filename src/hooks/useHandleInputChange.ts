@@ -1,10 +1,6 @@
 import { Dispatch, SetStateAction, ChangeEvent } from "react";
-import {
-  emailValidation,
-  passwordValidation
-} from "@/utils/register_validation";
+import { emailValidation, passwordValidation } from "@/utils/validationUtils";
 
-// UseHandleInputChangeProps の型定義をシンプルにする
 export interface UseHandleInputChangeProps {
   setErrors: Dispatch<SetStateAction<Record<string, boolean>>>;
   password?: string;

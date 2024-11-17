@@ -1,4 +1,3 @@
-// components/HamburgerMenu.js
 import React, { useContext, useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -36,7 +35,9 @@ interface HamburgerMenuProps {
   hasLogoutIcon: boolean;
 }
 
-const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ hasLogoutIcon }) => {
+export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
+  hasLogoutIcon
+}) => {
   const { isSignedIn, setIsSignedIn } = useContext(AuthContext);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
@@ -61,7 +62,8 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ hasLogoutIcon }) => {
   const router = useRouter();
   const handleLogoutConfirm = async () => {
     setLogoutDialogOpen(false);
-    // ログアウト処理をここに追加します
+
+    // ログアウト処理をここに追加
     try {
       const res = await signOut();
       if (res.data.success === true) {
@@ -151,5 +153,3 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ hasLogoutIcon }) => {
     </div>
   );
 };
-
-export default HamburgerMenu;

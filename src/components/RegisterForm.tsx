@@ -4,13 +4,14 @@ import { useState } from "react";
 import { validateRegisterForm } from "@/utils/register_validation";
 import { signUp } from "@/utils/auth";
 import { LabeledTextField } from "./ui/LabeledTextField";
-import { MessageAlert } from "./MessageAlert";
-import { LoginLink } from "./LoginLink";
 import { LabeledPasswordField } from "./ui/LabeledPasswordField";
 import { Copyright } from "./ui/Copyright";
 import { useHandleInputChange } from "@/hooks/useHandleInputChange";
 import { DisabledButton } from "./ui/DisabledButton";
 import { ButtonAboutAuth } from "./ui/ButtonAboutAuth";
+import { ActionLink } from "./ActionLink";
+import { SuccessAlertMessage } from "./ui/SuccessAlertMessage";
+import { ErrorAlertMessage } from "./ErrorAlertMessage";
 
 export const RegisterForm = () => {
   const [name, setName] = useState<string>("");
@@ -18,18 +19,17 @@ export const RegisterForm = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [passwordConfirmation, setPasswordConfirmation] = useState<string>("");
-
-  // errorsの型を Record<string, boolean> に統一
   const [errors, setErrors] = useState<Record<string, boolean>>({
     name: false,
     email: false,
     password: false,
     passwordConfirmation: false
   });
-
   const [isError, setIsError] = useState<boolean>(false);
-  const [errorMessages, setErrorMessages] = useState<string[]>([]);
-  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [errorMessages, setErrorMessagesDisplayedBelowButton] = useState<
+    string[]
+  >([]);
+  const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
 
   const handleInputChange = useHandleInputChange({
@@ -39,8 +39,8 @@ export const RegisterForm = () => {
   });
   const [disabledButton, setDisabledButton] = useState<boolean>(false);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     // バリデーション関数の結果を設定
     const { errors: validationErrors, errorMessages } = validateRegisterForm(
@@ -50,16 +50,15 @@ export const RegisterForm = () => {
       passwordConfirmation
     );
 
+    setDisabledButton(true);
     setErrors(validationErrors);
-    setErrorMessages(errorMessages);
+    setErrorMessagesDisplayedBelowButton(errorMessages);
 
     if (errorMessages.length > 0) {
       setIsError(true);
-      return;
     }
 
-    setDisabledButton(true);
-    const { success, message } = await signUp(
+    const result = await signUp(
       name,
       nickname,
       email,
@@ -67,15 +66,29 @@ export const RegisterForm = () => {
       passwordConfirmation
     );
 
-    if (success) {
-      setIsError(false);
-      setErrorMessages([]);
-      setIsSuccess(true);
-      setSuccessMessage(message);
+    if (result) {
+      const { success, message } = result;
+      console.log(success);
+      console.log(message);
+      if (success) {
+        setIsError(false);
+        setErrorMessagesDisplayedBelowButton([]);
+        setShowSuccessMessage(true);
+        setSuccessMessage(message);
+      } else {
+        setIsError(true);
+        setErrorMessagesDisplayedBelowButton((prevMessages) => [
+          ...prevMessages,
+          message
+        ]);
+        if (message) {
+          setErrors((prevErrors) => ({ ...prevErrors, email: true }));
+        }
+        setDisabledButton(false);
+      }
     } else {
+      // signUpがvoidを返した場合
       setDisabledButton(false);
-      setIsError(true);
-      setErrorMessages([message]);
     }
   };
 
@@ -93,33 +106,53 @@ export const RegisterForm = () => {
             value={name}
             onChange={handleInputChange(setName, "name")}
             required
-            error={errors.name}
-            helperText={errors.name ? "必須項目です" : ""}
+            errorStatus={errors.name}
+            errorMessageDisplayedBelowInput={
+              errors.name ? "ユーザー名を入力してください。" : ""
+            }
           />
           <LabeledTextField
             label="ニックネーム"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-            error={false}
-            helperText=""
+            errorStatus={false}
+            errorMessageDisplayedBelowInput=""
           />
           <LabeledTextField
             label="メールアドレス"
             value={email}
             onChange={handleInputChange(setEmail, "email")}
             required
-            error={errors.email}
-            helperText={
-              errors.email ? "メールアドレスの形式が誤っています" : ""
-            }
+            errorStatus={errors.email}
+            errorMessageDisplayedBelowInput={(() => {
+              if (errors.email) {
+                if (
+                  errorMessages.find((msg) =>
+                    msg.includes("既に使用されています")
+                  )
+                ) {
+                  return "このメールアドレスは登録できません。";
+                } else if (
+                  errorMessages.find((msg) =>
+                    msg.includes("メールアドレスを入力してください。")
+                  )
+                ) {
+                  return "メールアドレスを入力してください。";
+                } else {
+                  return "メールアドレスの形式が誤っています。";
+                }
+              } else {
+                return "";
+              }
+            })()}
           />
           <LabeledPasswordField
             label="パスワード"
             name="password"
             value={password}
             onChange={handleInputChange(setPassword, "password")}
-            error={errors.password}
-            helperText={
+            errorStatus={errors.password}
+            errorMessageDisplayedBelowInput={
               errors.password
                 ? "パスワードは、6字以上16字以下の半角入力を含む必要があります。"
                 : ""
@@ -133,8 +166,8 @@ export const RegisterForm = () => {
               setPasswordConfirmation,
               "passwordConfirmation"
             )}
-            error={errors.passwordConfirmation}
-            helperText={
+            errorStatus={errors.passwordConfirmation}
+            errorMessageDisplayedBelowInput={
               errors.passwordConfirmation
                 ? "パスワードと確認用パスワードが一致しません。"
                 : ""
@@ -148,19 +181,21 @@ export const RegisterForm = () => {
         </Box>
       </Grid>
       <Grid item xs={11}>
-        <MessageAlert
-          isError={isError}
-          errorMessages={errorMessages}
-          setErrorMessages={setErrorMessages}
-          isSuccess={isSuccess}
-          successMessage={successMessage}
-          onSuccessClose={() => {
-            setIsSuccess(false);
-            setSuccessMessage("");
-          }}
-        />
+        {isError ? (
+          <ErrorAlertMessage
+            errorMessages={errorMessages}
+            setErrorMessages={setErrorMessagesDisplayedBelowButton}
+          />
+        ) : (
+          showSuccessMessage && (
+            <SuccessAlertMessage successMessage={successMessage} />
+          )
+        )}
       </Grid>
-      <LoginLink />
+      <ActionLink
+        href="../login"
+        label="すでにアカウントをお持ちの方はこちらへ"
+      />
       <div className="my-10">
         <Copyright />
       </div>
