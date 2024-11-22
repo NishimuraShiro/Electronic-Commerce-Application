@@ -76,6 +76,7 @@ export const requestResetPassword = async (
   email: string
 ): Promise<{ success: boolean; message: string } | void> => {
   try {
+    console.log("try request");
     const response = await fetch(
       "https://ec-app-backend-67e3477cc04a.herokuapp.com/api/v1/auth/password",
       {
@@ -90,7 +91,7 @@ export const requestResetPassword = async (
         })
       }
     );
-
+    console.log("after request");
     const data = await response.json();
     if (response.ok) {
       return {
@@ -99,6 +100,7 @@ export const requestResetPassword = async (
           "パスワード再設定の手続きがメールに送信されました。メールアドレスをご確認ください。"
       };
     } else if (response.status === 500) {
+      console.log("error 500");
       return {
         success: false,
         message: "入力されたメールアドレスは登録されていません。"
