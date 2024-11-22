@@ -1,6 +1,6 @@
 "use client";
 import { Box, Grid } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { LabeledTextField } from "./ui/LabeledTextField";
 import { useHandleInputChange } from "@/hooks/useHandleInputChange";
 import { validateRequestResetPasswordForm } from "@/utils/request_reset_password_validation";
@@ -23,6 +23,26 @@ export const RequestResetPassword = () => {
     email: false
   });
   const [disabledButton, setDisabledButton] = useState<boolean>(false);
+  const [isReadyToDisplayErrors, setIsReadyToDisplayErrors] =
+    useState<boolean>(false);
+  const [isReadyToDisplayFieldErrors, setIsReadyToDisplayFieldErrors] =
+    useState<boolean>(false);
+
+  useEffect(() => {
+    if (errorMessages.length > 0) {
+      setIsReadyToDisplayErrors(true);
+    } else {
+      setIsReadyToDisplayErrors(false);
+    }
+  }, [errorMessages]);
+
+  useEffect(() => {
+    if (Object.values(errors).some((value) => value)) {
+      setIsReadyToDisplayFieldErrors(true);
+    } else {
+      setIsReadyToDisplayFieldErrors(false);
+    }
+  }, [errors]);
 
   const handleInputChange = useHandleInputChange({
     setErrors
@@ -37,33 +57,27 @@ export const RequestResetPassword = () => {
     setDisabledButton(true);
     setErrors(validationErrors);
     setErrorMessagesDisplayedBelowButton(errorMessages);
-    console.log(errorMessages);
     if (errorMessages.length > 0) {
       setIsError(true);
-    }
-
-    const result = await requestResetPassword(email);
-    if (result) {
-      const { success, message } = result;
-      if (success) {
-        setIsError(false);
-        setErrorMessagesDisplayedBelowButton([]);
-        setShowSuccessMessage(true);
-        setSuccessMessage(message);
-      } else {
-        setIsError(true);
-        setDisabledButton(false);
-        setErrorMessagesDisplayedBelowButton((prevMessages) => [
-          ...prevMessages,
-          message
-        ]);
-        console.log(errorMessages);
-        if (message) {
-          setErrors((prevErrors) => ({ ...prevErrors, email: true }));
-        }
-      }
-    } else {
       setDisabledButton(false);
+      return;
+    } else {
+      const result = await requestResetPassword(email);
+      if (result) {
+        const { success, message } = result;
+        if (success) {
+          setIsError(false);
+          setShowSuccessMessage(true);
+          setSuccessMessage(message);
+        } else {
+          setIsError(true);
+          setDisabledButton(false);
+          setErrors((prevErrors) => ({ ...prevErrors, email: true }));
+          setErrorMessagesDisplayedBelowButton([message]);
+        }
+      } else {
+        setDisabledButton(false);
+      }
     }
   };
   return (
@@ -80,9 +94,9 @@ export const RequestResetPassword = () => {
             value={email}
             onChange={handleInputChange(setEmail, "email")}
             required
-            errorStatus={errors.email}
+            errorStatus={errors.email && isReadyToDisplayFieldErrors}
             errorMessageDisplayedBelowInput={(() => {
-              if (errors.email) {
+              if (errors.email && isReadyToDisplayFieldErrors) {
                 if (
                   errorMessages.find((msg) =>
                     msg.includes("メールアドレスを入力してください。")
@@ -113,7 +127,7 @@ export const RequestResetPassword = () => {
         </Box>
       </Grid>
       <Grid item xs={11}>
-        {isError ? (
+        {isError && isReadyToDisplayErrors ? (
           <ErrorAlertMessage
             errorMessages={errorMessages}
             setErrorMessages={setErrorMessagesDisplayedBelowButton}
