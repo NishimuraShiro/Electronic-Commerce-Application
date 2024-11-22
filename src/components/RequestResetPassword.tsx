@@ -31,6 +31,7 @@ export const RequestResetPassword = () => {
   useEffect(() => {
     if (errorMessages.length > 0) {
       setIsReadyToDisplayErrors(true);
+      console.log(errorMessages);
     } else {
       setIsReadyToDisplayErrors(false);
     }
