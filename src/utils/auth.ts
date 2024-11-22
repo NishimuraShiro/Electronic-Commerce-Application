@@ -91,7 +91,7 @@ export const requestResetPassword = async (
         })
       }
     );
-    console.log("after request");
+    console.log(response);
     const data = await response.json();
     console.log(data);
     if (response.ok) {
